@@ -1,0 +1,43 @@
+<html>
+<head>
+<style>
+.partyanimal {
+    height: 300px;
+    width:  300px;
+    border: 1px solid blue;
+    padding: 50px;
+    margin-top: 50px;
+}
+.y-square {
+    background: url('20px-square.png') repeat-y;
+}
+.y-cross {
+    background: url('20px-cross.png') repeat-y;
+}
+.x-square {
+    background: url('20px-square-2.png') repeat-x;
+}
+.x-cross {
+    background: url('20px-cross-2.png') repeat-x;
+}
+</style>
+</head>
+<body>
+<h1>SpriteMe vertical-repeat testing, part the first</h1>
+<em>The idea is to home in on why the repeat-y logic is failing 
+by using a simple scenario: two vertically-repeating images to
+be sprited by SpriteMe.</em>
+<div class='partyanimal y-square'>
+<p>Here are some vertical-aligned squares!</p>
+</div>
+<div class="partyanimal y-cross">
+<p>Here are some vertical-aligned crosses!</p>
+</div>
+<div class='partyanimal x-square'>
+<p>Here are some horizontally-aligned squares!</p>
+</div>
+<div class="partyanimal x-cross">
+<p>Here are some horizontally-aligned crosses!</p>
+</div>
+</body>
+</html>

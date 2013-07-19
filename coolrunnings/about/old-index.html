@@ -1,0 +1,82 @@
+<!DOCTYPE html 
+      PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html
+      xmlns="http://www.w3.org/1999/xhtml" 
+      xml:lang="en-US"
+      lang="en-US">
+<head profile="http://www.w3.org/2005/10/profile">
+<link rel="icon" 
+      type="image/png" 
+      href="http://www.jaredhirsch.com/images/favicon.ico" /> 
+<title>coolRunnings CSS Sprite generator: about</title> 
+</head> 
+<body>
+<h1>coolRunnings is a CSS Sprite generator.</h1>
+<ul>quick facts:
+<li>written in test-driven PHP</li>
+<li>open source, released under the liberal BSD license</li>
+<li>currently implemented as a web service, accepting input via GET string</li>
+<li>the code is at <a href="http://bitbucket.org/jared/coolrunnings/">http://bitbucket.org/jared/coolrunnings/</a></li>
+<li>there is a working copy alive at <a href="http://jaredhirsch.com/coolrunnings/index.php">http://jaredhirsch.com/coolrunnings/index.php</a>; see below for documentation on its use.</li>
+</ul>
+<h2>Configuration and dependencies:</h2> <p>The copy of PHP on your web server must have json_encode and json_decode, either from having a newish PHP, or from having the JSON PECL package installed. You also must have a newish version of the Imagick extension, and ImageMagick running underneath it.</p>
+<h1>project status</h1>
+<p>As of 9/5/09, the call to the no-longer-available smush.it image optimizer has been removed. Instead, PNG optimization is carried out on the server. This should improve response time.
+
+<h3>Older updates</h3>
+<p>As of 7/29/09, I've committed the ugly hacks to the bitbucket repo. This means that you are looking into the workroom when it's in need of a thorough cleaning. However, the tool <em>does</em> work, and you can make it work on your local box by doing the following:</p>
+<ol>
+<li>Grab the latest version (coincidentally the 100th commit), either via hg, or by <a href="http://bitbucket.org/jared/coolrunnings/downloads/">downloading</a> a zip/gzip from bitbucket.</li>
+<li>Unpack in a web-facing directory.</li>
+<li>Make everything executable, and make the coolrunnings/public_images directory writable by the web user.</li>
+<li>You need to change exactly two things: in coolrunnings/library/Bootstrap, lines 33 and 34, change the WebRoot and RootUrl to suitable values. If you set the RootUrl to localhost, you won't be able to pass sprites to smush.it, but you will still generate sprites.</li>
+<li>You should now be able to point your browser (or wget) at http://yourUrl/coolrunnings/index.php?... and receive a sprite in return. In particular, if you're hacking on <a href="http://spriteme.org">SpriteMe</a>, you can point all the generator calls at your local machine.</li>
+</ol>
+<p>I'll be publishing a roadmap soon. The immediate goal is to refactor the current sloppy codebase.</p>
+<p>If you feel compelled to suggest something in the meanwhile, feel free to hit the bug tracker at bitbucket, or just email me; I'm friendly and approachable.</p>
+
+<p>As of 7/22/09, the absolute-coordinate generator is up and running. It's being used in Steve Souders's <a href="http://spriteme.org">SpriteMe</a> tool. I'd love to hear from anyone interested in using it in their own front-end tool, adding features or collaborating on further development.</p>
+<p><em>Please note that the version at bitbucket isn't exactly the version running on the web.</em> I've accrued some technical debt over the last couple of days. When the code is beta-ready, I'll create a 1.0 version that should be installable by just untarring and editing a config file.
+<p><em>Many enhancements are planned.</em> Check back at this page for major updates. Following the <a href="http://bitbucket.org/jared/coolrunnings/atom/">Atom feed</a> at bitbucket is one way to stay informed. I may or may not continue <a href="http://blog.jaredhirsch.com">blogging</a> about technical matters; articles seem more my style. At any rate, I plan to collect any articles or blog posts I write about coolRunnings here.</p>
+<h2>How to use the absolute-coordinate generator:</h2>
+<p>send an http request to http://jaredhirsch.com/coolrunnings/index.php?format=[json|image]&absolute={foo} where {foo} equals, for example:
+<pre>{"canvas":
+    {"name":"ghosts-a-plenty",
+     "height":75,
+     "width": 222, 
+     "background-color":"gray",
+     "comments":"normally you would save sprite coordinates in here"},
+     "images":[
+        {"url":"http://www.namcogames.com/iphone_games/images/blinky.png",
+        "top":10,
+        "left":10},
+        {"url":"http://www.namcogames.com/iphone_games/images/pinky.png",
+        "top":10,
+        "left":63},
+        {"url":"http://www.namcogames.com/iphone_games/images/inky.png",
+        "top":10,
+        "left":116},
+        {"url":"http://www.namcogames.com/iphone_games/images/sue.png",
+        "top":10,
+        "left":169}]}</pre>
+Of course, you would have different values for all these properties.</p>
+<h3>About the <em>format</em> option</h3>
+<p>If you pass it the format=image option, the service returns an image directly.</p>
+<p>If you pass it the format=json option, the service returns the URL of the image, instead of the image, in script form, like this: <pre>var coolRunnings = {"url":"http:\/\/example.com\/foo.png"}</pre></p>
+
+<h3>Other things to note</h3>
+<p>When coolRunnings has assembled a sprite, it tries to optimize the sprite by passing it to smush.it. If this fails, the unoptimized image is returned.</p>
+<p>This is an absolute-coordinate generator, in contrast to generators that use a relative-addressing scheme, where you give a list of images and their offsets. Relative-addressing generators include the <a href="http://spritegen.website-performance.org/">CSS Sprite Generator</a> and <a href="http://csssprites.com">csssprites.com</a>, plus probably many I'm unaware of :-)</p>
+<a href="http://jaredhirsch.com">back to jh.com</a>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-8707350-2");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+</body>
+</html>

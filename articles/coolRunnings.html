@@ -1,0 +1,101 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+   "http://www.w3.org/TR/html4/strict.dtd">
+<head>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8"> 
+<!-- we're going to apply the YUI reset: -->
+<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.8.0r4/build/reset/reset-min.css"> 
+<!-- and the YUI base, though this might not work out -->
+<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.8.0r4/build/base/base-min.css"> 
+<link rel="stylesheet" type="text/css" href="http://jaredhirsch.com/css/new-thing.css">
+<!--[if IE]>
+<link rel="stylesheet" type="text/css" href="http://jaredhirsch.com/css/new-thing-ie.css">
+<![endif]-->
+<style>
+html { background-color: #aaa; }
+</style>
+<title>JH.com: on coolRunnings</title>
+</head>
+<body>
+<h1><span><strong>coolRunnings</strong>: documentation for programmers</span></h1>
+<p><span>back to <a href="http://jaredhirsch.com/articles/">articles</a>. back <a href="http://jaredhirsch.com/">home</a>.</span></p>
+<div style="background-color:red"><h3>this is a rough draft. I'm reworking coolRunnings; the details are not 100% solid yet. last updated around 5, 10/21/09.</h3>
+</div>
+<h2>Overview</h2>
+<p><span>coolRunnings can be summarized as this sequence of big steps:</span></p>
+<ol>
+    <li><span>Translate HTTP request into sprite generator input</span></li>
+    <li><span>Download component images into a local directory</span></li>
+    <li><span>Construct the sprite using the request parameters and the downloaded images</span></li>
+    <li><span>Save the sprite in a suitable, web-accessible directory</span></li>
+    <li><span>Translate sprite generator output into HTTP response</span></li>
+</ol>
+<p><span>I've been thinking of handling it along these lines:</span></p>
+
+<h2>FrontController API</h2>
+<strong>FrontController::constructRequest</strong>
+    <p><span>Filters and converts HTTP into a <strong>Request</strong> object. This includes decoding json input, checking for missing fields, and filtering fields according to type.</span></p>
+
+<strong>FrontController::routeRequest</strong>
+    <p><span>Examine the Request to determine what controller and method to call, then call the controller class and method.</span></p>
+<strong>FrontController::setController</strong>
+<strong>FrontController::getController</strong>
+<p><span>Right now, we really just have one class to pass the Request to: the SpriteController. So, this can be hard-coded--except that we need to override the hard-coded name if we want to swap in a test class. <strong>setController</strong> handles this case; <strong>getController</strong> returns the SpriteController reference by default, if setController hasn't been called.</span></p>
+
+<strong>FrontController::sendResponse</strong>
+    <p><span>After the FrontController receives a Response from the SpriteController, it sets the headers and echoes out the response body in this step.</span></p>
+    <p><span>We know that the request could be for sprite info, in json format, or the request could be for the raw sprite image. So the <strong>SpriteResponse</strong> can implement a <strong>Response</strong> interface to give the file type (<strong>getResponseMimeType</strong>) and the contents (<strong>getResponseContents</strong>). Errors can implement <strong>Response</strong> with error message and text/html mime type.</span></p>
+
+<h2>Request API</h2>
+
+<p><span>Request is just a generic object. Not sure if it'll even have any methods.</span></p>
+
+<h2>Response API</h2>
+    <p><span>Response is sent by SpriteController to FrontController. FrontController translates Response into HTTP output.</span></p>
+    <p><span>SpriteResponses will have json or image mime type and sprite data or image contents. ErrorResponses will have html mime type with error message contents.</span></p>
+
+<p><span><strong>Response::getResponseMimeType</strong> & <strong>Response::setResponseMimeType</strong></span></p>
+    <p><span>Set and get the response MIME type. Used by FrontController to determine the headers to set in the HTTP output.</span></p>
+
+<p><span><strong>Response::getResponseContents</strong> & <strong>Response::setResponseContents</strong></span></p>
+<p><span>Set and get the body of the response. Used by FrontController as the body of the HTTP output.</span></p>
+
+<h2>SpriteController API</h2>
+
+<p><span>We'll add a method for each kind of sprite request. The SpriteGenerator used is more of a config issue: I don't imagine anyone would have the Imagick option and the imagemagick passthru option cranking on the same service. </span></p>
+<strong>SpriteController::makeAbsoluteSprite</strong>
+<p><span>This is the sprite creation mode from the alpha version: given a list of image URLs, the top-left coordinate of each inside the sprite, and the sprite dimensions and background color, we'll want to</span></p>
+<ol>
+  <li><span>create a local save directory (use <strong>FileHandler::makeSavePath</strong>)</span></li>
+  <li><span>download the requested images to the save directory (use <strong>Downloader::fetchFiles</strong>)</span></li>
+  <li><span>hand off the local image paths and other params to the <strong>SpriteGenerator</strong>, getting the sprite location in response</span></li>
+  <li><span>finally, construct a response (json or raw img, depending on the <strong>Request</strong>) and pass it up to the <strong>FrontController</strong></span></li>
+</ol>
+
+<strong>SpriteController::constructResponse</strong>
+    <p><span>After <strong>SpriteGenerator::generate</strong> returns a Sprite object with useful data like the sprite's web-accessible URL [[this is translated from local file path to web-accessible path by <strong>FrontController</strong>]], filesize, bytes saved, and image dimensions, the  If the request was for json sprite metadata, put that metadata into json and emit. If the request was for the raw image, just echo the image to stdout.</span></p>
+
+<h2>SpriteGenerator API</h2>
+<p><span>SpriteGenerator is a <a href="http://c2.com/cgi/wiki?StrategyPattern">Strategy</a>: an object that represents an algorithm for creating a Sprite using an external tool--might be PHP's Imagick or GD extensions, or might be a passthru to any command-line image editing library. This is likely to be a static configuration parameter (which library to use on the installed machine).</span></p>
+<p><span>There's a dynamic configuration aspect as well: the SpriteGenerator might change at runtime, based on the kind of sprite request received (absolute-coordinate or relative-coordinate addressing).</span></p>
+<strong>SpriteGenerator::generate(Sprite)</strong>
+<p><span>An incomplete Sprite object is passed in, containing local component locations and instructions for assembly. A complete Sprite is passed out, additionally containing the image size comparison and the local path to the generated Sprite.</span></p>
+
+<h2>FileHandler API</h2>
+<p><span>FileHandler is stateful: we set the save path, which calls createSavePath if it doesn't exist; then we can pass the FileHandler instance around to save files without re-specifying paths.</span></p>
+<strong>createSavePath(path)</strong>
+<p><span>Create the path specified.</span></p>
+<strong>save(stream, filename, [path])</strong>
+<p><span>Save stream contents to the specified filename. If path isn't given, uses path set by setSavePath.</span></p>
+<p><span><strong>getSavePath</strong> & <strong>setSavePath</strong></span></a>
+
+<h2>Downloader API</h2>
+<strong>fetchFiles(array $urls, FileHandler)</strong>
+<p><span>use the FileHandler::save(stream, path) method to save the curl_multi parallel fetched files as they arrive. Or, in a more primitive implementation, use the same FileHandler method to save files downloaded one at a time.</span></p>
+
+<h2>Sprite API</h2>
+<p><span>A <strong>Sprite</strong> contains useful data like the sprite's web-accessible URL [[this is translated from local file path to web-accessible path by a Config object call -or- the FrontController.]] Other data: filesize, bytes saved, comments, image dimensions.</span></p>
+    <p><span>Sprite is initially created by <strong>SpriteController</strong>, encapsulating input parameters for <strong>SpriteGenerator</strong>: local paths to component images, sprite size and background color, and location of component images in the sprite. SpriteGenerator creates the sprite, adds its local path and file size into the Sprite, then returns the Sprite to the SpriteController.</span></p>
+
+<p><strong>everything in this page copyright Jared Hirsch <a href="http://www-cs-faculty.stanford.edu/~knuth/mmix.html">MMIX</a> + 1.</strong></p>
+</body>
+</html>

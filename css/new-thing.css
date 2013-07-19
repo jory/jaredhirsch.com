@@ -1,0 +1,45 @@
+@font-face {
+    font-family: "Inconsolata";
+    src: url(http://jaredhirsch.com/css/Inconsolata.otf) format('opentype');
+}
+html {
+    font-family: 'Inconsolata', monospace;
+    font-size: 21px;
+    background-color: aqua;
+}
+p {
+    width:30em;
+}
+strong {
+    background-color: yellow;
+    font-weight: normal;
+}
+h1 {
+    font-family: 'Inconsolata', monospace;
+    font-weight: normal;
+    font-size: 36px;
+}
+em {
+    font-style: normal;
+    background-color:magenta;
+}
+span {
+    background-color: white;
+}
+pre, h2 {
+    font-weight:normal;
+    font-size:1em;
+    font-family: "Inconsolata", monospace;
+    color: aqua;
+    background-color:#222;
+    margin-left: 5em;
+    width:42em;
+}
+pre span {
+      background-color:black;
+}
+pre strong {
+    font-family: "Inconsolata", monospace;
+    background-color:#222;
+    color:yellow;
+}
